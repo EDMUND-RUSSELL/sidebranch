@@ -1,0 +1,31 @@
+name: syntax
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  esbuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check TSX syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            echo "checking $file"
+            npx --yes esbuild@0.28.2 "$file" \
+              --bundle \
+              --format=esm \
+              --platform=node \
+              --target=node22 \
+              --external:@opencode/plugin/tui \
+              --external:solid-js \
+              --outfile=/tmp/plugin-check.js
+          done < <(find . -name 'tui.tsx' -not -path './.git/*' -print0)
